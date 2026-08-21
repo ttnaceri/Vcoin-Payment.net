@@ -15,10 +15,11 @@ var Auth = {
   recoveryId: null,
 
   // ===== CONFIG DAN BOT MA'LUMOTLARI =====
-  BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKEN : '8951698601:AAFnHx-hI1p86pjGBlYAoaswVydpDOlxnb4',
-  BOT_USERNAME: (typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? CONFIG.BOT_USERNAME : 'Vcoinverify_bot',
-  BOT_URL: 'https://t.me/' + ((typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? CONFIG.BOT_USERNAME : 'Vcoinverify_bot'),
+BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKEN : '',
+  BOT_USERNAME: (typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? CONFIG.BOT_USERNAME : '',
+  BOT_URL: (typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? 'https://t.me/' + CONFIG.BOT_USERNAME : '#',
 
+  
   // ============ TIL FUNKSIYASI ============
   t: function(key, fallback) {
     if (typeof LANG !== 'undefined' && LANG.t) {
