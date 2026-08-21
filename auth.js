@@ -14,12 +14,12 @@ var Auth = {
   recoveryCode: null,
   recoveryId: null,
 
-  // ===== CONFIG DAN BOT MA'LUMOTLARI =====
-BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKEN : '',
+  // ===== CONFIG DAN BOT MA'LUMOTLARI (XAVFSIZ) =====
+  // CONFIG mavjud bo'lmasa, default qiymatlar (xavfsizlik uchun empty)
+  BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKEN : '',
   BOT_USERNAME: (typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? CONFIG.BOT_USERNAME : '',
   BOT_URL: (typeof CONFIG !== 'undefined' && CONFIG.BOT_USERNAME) ? 'https://t.me/' + CONFIG.BOT_USERNAME : '#',
 
-  
   // ============ TIL FUNKSIYASI ============
   t: function(key, fallback) {
     if (typeof LANG !== 'undefined' && LANG.t) {
@@ -278,7 +278,7 @@ BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKE
     btn.disabled = false;
   },
 
-  // ============ LOGIN (TUZATILGAN) ============
+  // ============ LOGIN ============
   login: async function() {
     var t = this.t.bind(this);
     var nickname = document.getElementById('loginNickname').value.trim();
@@ -641,6 +641,13 @@ BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKE
   // ============ SEND TELEGRAM CODE ============
   sendTelegramCode: async function(username, code) {
     try {
+      // BOT_TOKEN mavjudligini tekshirish
+      if (!this.BOT_TOKEN) {
+        console.error('❌ BOT_TOKEN sozlanmagan! config.js ni tekshiring.');
+        UI.showToast('❌ Bot tokeni sozlanmagan! Admin bilan bog\'laning.', 'error');
+        return false;
+      }
+      
       username = username.replace('@', '').trim().toLowerCase();
       
       console.log('📱 Telegram kod yuborilmoqda:', { username, code });
@@ -936,6 +943,13 @@ BOT_TOKEN: (typeof CONFIG !== 'undefined' && CONFIG.BOT_TOKEN) ? CONFIG.BOT_TOKE
   // ============ SEND RECOVERY CODE ============
   sendRecoveryCode: async function(username, code) {
     try {
+      // BOT_TOKEN mavjudligini tekshirish
+      if (!this.BOT_TOKEN) {
+        console.error('❌ BOT_TOKEN sozlanmagan! config.js ni tekshiring.');
+        UI.showToast('❌ Bot tokeni sozlanmagan! Admin bilan bog\'laning.', 'error');
+        return false;
+      }
+      
       username = username.replace('@', '').trim().toLowerCase();
       
       console.log('📱 Tiklash kodi yuborilmoqda:', { username, code });
