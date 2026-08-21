@@ -19,9 +19,7 @@
     if (typeof LANG !== 'undefined' && LANG.loadLanguage) {
       var currentLang = LANG.loadLanguage();
       console.log('🌐 Language loaded:', currentLang);
-    } else {
-      console.warn('⚠️ LANG module not found');
-    }
+    } else
     
     // ============ 2. ROUTER ============
     console.log('🔄 Initializing router...');
