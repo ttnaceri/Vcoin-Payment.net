@@ -1,10 +1,11 @@
 /**
  * Vcoin Payment App — Main Application
- * Cloud sinxronlash bilan + Til qo'llab-quvvatlash
+ * Local backend bilan sinxronlash + Til qo'llab-quvvatlash
  * Tashqi to'lovlar setshopid ga tushadi
  * Tashqi saytlar Vcoin qo'sha oladi (add parametri)
  * Webhook qo'llab-quvvatlash (to'lovdan keyin xabar yuborish)
  * REFUND - Premium bekor qilish (Vcoin qaytarish)
+ * JSONBin.io O'CHIRILDI - faqat Local backend
  */
 
 (function() {
@@ -19,34 +20,46 @@
       var currentLang = LANG.loadLanguage();
       console.log('🌐 Language loaded:', currentLang);
     } else {
-      
+      console.warn('⚠️ LANG module not found');
     }
     
     // ============ 2. ROUTER ============
     console.log('🔄 Initializing router...');
-    Router.init();
+    if (typeof Router !== 'undefined') {
+      Router.init();
+    }
     
     // ============ 3. UI ============
     console.log('🎨 Initializing UI...');
-    UI.init();
+    if (typeof UI !== 'undefined') {
+      UI.init();
+    }
     
-    // ============ 4. CLOUD SINXRONLASH ============
-    console.log('☁️ Cloud sync...');
+    // ============ 4. BACKEND SINXRONLASH ============
+    console.log('☁️ Backend sync...');
     try {
-      await Cloud.syncToLocal();
-      console.log('✅ Cloud synced');
+      if (typeof Cloud !== 'undefined') {
+        await Cloud.syncToLocal();
+        console.log('✅ Backend synced');
+      } else {
+        console.warn('⚠️ Cloud module not found');
+      }
     } catch(e) {
-      console.log('⚠️ Cloud sync error:', e.message);
+      console.log('⚠️ Backend sync error:', e.message);
     }
     
     // ============ 5. USER TEKSHIRISH ============
-    if (DB.userExists()) {
+    if (typeof DB !== 'undefined' && DB.userExists()) {
       var user = DB.getUser();
       console.log('👤 User:', user.nickname, '| Balance:', user.balance);
-      UI.navigateTo('dashboard');
+      if (typeof UI !== 'undefined') {
+        UI.navigateTo('dashboard');
+      }
     } else {
       console.log('🆕 No user found');
-      UI.navigateTo('auth');
+      if (typeof UI !== 'undefined') {
+        UI.navigateTo('auth');
+      }
     }
     
     // ============ 6. URL PARAMETRLARNI TEKSHIRISH ============
@@ -73,7 +86,7 @@
       return;
     }
     
-    // ===== 3. REFUND - PREMIUM BEKOR QILISH (YANGI) =====
+    // ===== 3. REFUND - PREMIUM BEKOR QILISH =====
     if (params.refund && params.amount && params.token) {
       handleRefundVcoin(params);
       return;
@@ -251,7 +264,7 @@
     clearUrlParams();
   }
   
-  // ============ REFUND - PREMIUM BEKOR QILISH (YANGI) ============
+  // ============ REFUND - PREMIUM BEKOR QILISH ============
   function handleRefundVcoin(params) {
     var token = params.token;
     var amount = parseFloat(params.amount);
