@@ -14,7 +14,6 @@ var Cloud = {
   // Local backend
   LOCAL_URL: (CONFIG.LOCAL && CONFIG.LOCAL.URL) ? CONFIG.LOCAL.URL : 'http://localhost:3000/api/',
   
-  // JSONBin.io - O'CHIRILDI
 
   // ============ MA'LUMOTLARNI YUKLASH ============
   loadData: async function() {
