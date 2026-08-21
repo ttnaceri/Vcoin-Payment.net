@@ -1,10 +1,11 @@
 /**
  * Vcoin Payment App — Storage Manager
- * LocalStorage + Cloud Database (JSONBin.io)
+ * LocalStorage + Local Backend (backend.json)
  * Referral O'CHIRILDI
+ * JSONBin.io O'CHIRILDI
  */
 
-const DB = {
+var DB = {
   PREFIX: 'vcoin_',
   
   /**
@@ -69,13 +70,6 @@ const DB = {
     this.set('user', userData);
     this.saveUserToRegistry(userData);
     
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.addUser) {
-      Cloud.addUser(userData).catch(function(e) {
-        console.warn('⚠️ Cloud save error:', e.message);
-      });
-    }
-    
     // Trigger event
     this.triggerEvent('userUpdated', userData);
     return true;
@@ -130,19 +124,10 @@ const DB = {
       id: user.id,
       nickname: user.nickname || 'Unknown',
       balance: user.balance || 0,
-      // referralLink: O'CHIRILDI
       token: user.token || '',
-      // referredBy: O'CHIRILDI
       createdAt: user.createdAt || new Date().toISOString()
     };
     this.set('allUsers', allUsers);
-    
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.addUser) {
-      Cloud.addUser(allUsers[user.id]).catch(function(e) {
-        console.warn('⚠️ Cloud registry save error:', e.message);
-      });
-    }
     
     return true;
   },
@@ -169,13 +154,6 @@ const DB = {
       this.set('user', currentUser);
     }
     
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.updateUser) {
-      Cloud.updateUser(userId, updates).catch(function(e) {
-        console.warn('⚠️ Cloud update error:', e.message);
-      });
-    }
-    
     return true;
   },
 
@@ -199,13 +177,6 @@ const DB = {
     this.set('user', user);
     this.saveUserToRegistry(user);
     
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.updateBalance) {
-      Cloud.updateBalance(user.id, newBalance).catch(function(e) {
-        console.warn('⚠️ Cloud balance update error:', e.message);
-      });
-    }
-    
     // Trigger event
     this.triggerEvent('balanceUpdated', { userId: user.id, balance: newBalance });
     
@@ -228,13 +199,6 @@ const DB = {
         this.set('user', currentUser);
       }
       
-      // Cloud ga saqlash
-      if (window.Cloud && Cloud.updateBalance) {
-        Cloud.updateBalance(userId, amount).catch(function(e) {
-          console.warn('⚠️ Cloud balance set error:', e.message);
-        });
-      }
-      
       return true;
     }
     
@@ -244,7 +208,6 @@ const DB = {
       nickname: 'User_' + userId.slice(-4),
       balance: amount,
       token: '',
-      // referralLink: O'CHIRILDI
       createdAt: new Date().toISOString()
     };
     this.set('allUsers', allUsers);
@@ -281,13 +244,6 @@ const DB = {
     if (transactions.length > 500) transactions.length = 500;
     this.set('transactions', transactions);
     
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.addTransaction) {
-      Cloud.addTransaction(tx).catch(function(e) {
-        console.warn('⚠️ Cloud transaction save error:', e.message);
-      });
-    }
-    
     // Trigger event
     this.triggerEvent('transactionAdded', tx);
     
@@ -307,9 +263,6 @@ const DB = {
 
   // ============================================================
   // REFERRAL - BUTUNLAY O'CHIRILDI
-  // getReferrals() - O'CHIRILDI
-  // addReferral() - O'CHIRILDI
-  // getReferralsByUser() - O'CHIRILDI
   // ============================================================
 
   /**
@@ -390,7 +343,6 @@ const DB = {
       depositProfit: 16,
       minDepositDays: 7,
       maxDepositDays: 30,
-      // referralBonus: O'CHIRILDI
       adminPassword: '55668576'
     });
   },
@@ -406,13 +358,6 @@ const DB = {
       settings[key] = newSettings[key];
     }
     this.set('settings', settings);
-    
-    // Cloud ga saqlash
-    if (window.Cloud && Cloud.updateSettings) {
-      Cloud.updateSettings(settings).catch(function(e) {
-        console.warn('⚠️ Cloud settings update error:', e.message);
-      });
-    }
     
     return true;
   },
@@ -543,7 +488,6 @@ const DB = {
     var allUsers = this.getAllUsers();
     var transactions = this.getTransactions();
     var deposits = this.getDeposits();
-    // var referrals = this.getReferrals(); - O'CHIRILDI
     
     var totalVolume = transactions.reduce(function(sum, tx) { 
       return sum + Math.abs(tx.amount || 0); 
@@ -563,7 +507,6 @@ const DB = {
       totalVolume: totalVolume,
       activeDeposits: activeDeposits.length,
       totalDeposited: totalDeposited,
-      // totalReferrals: O'CHIRILDI
       bannedUsers: this.getBannedUsers().length,
       deposits: deposits
     };
@@ -591,17 +534,17 @@ const DB = {
   },
 
   /**
-   * Sync with cloud
+   * Sync with backend (local)
    */
-  syncWithCloud: async function() {
+  syncWithBackend: async function() {
     if (!window.Cloud) {
-      console.warn('⚠️ Cloud not available');
+      console.warn('⚠️ Cloud module not available');
       return false;
     }
     
     try {
       await Cloud.syncToLocal();
-      console.log('✅ Synced with cloud');
+      console.log('✅ Synced with backend');
       return true;
     } catch (e) {
       console.error('❌ Sync error:', e);
@@ -610,9 +553,9 @@ const DB = {
   },
 
   /**
-   * Check if cloud is available
+   * Check if backend is available
    */
-  isCloudAvailable: function() {
+  isBackendAvailable: function() {
     return typeof Cloud !== 'undefined' && Cloud !== null;
   }
 };
@@ -627,12 +570,10 @@ const DB = {
       depositProfit: 16,
       minDepositDays: 7,
       maxDepositDays: 30,
-      // referralBonus: O'CHIRILDI
       adminPassword: '55668576'
     });
     DB.set('allUsers', {});
     DB.set('transactions', []);
-    // DB.set('referrals', []); - O'CHIRILDI
     DB.set('deposits', []);
     DB.set('adminLogs', []);
     DB.set('bannedUsers', []);
@@ -641,10 +582,10 @@ const DB = {
     console.log('✅ Database initialized');
   }
   
-  // Auto-sync with cloud on load
-  if (DB.isCloudAvailable()) {
+  // Auto-sync with backend on load
+  if (DB.isBackendAvailable()) {
     setTimeout(function() {
-      DB.syncWithCloud();
+      DB.syncWithBackend();
     }, 3000);
   }
   
