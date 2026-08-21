@@ -1,0 +1,61 @@
+{
+  "users": {
+    "555555555": {
+      "id": "555555555",
+      "nickname": "Bekhzod",
+      "balance": 120,
+      "token": "VCOIN-MHEJ-8J0W-K9RG-UCUF",
+      "password": null,
+      "telegram": "rasulov_bekhzod",
+      "referralLink": "?ref=555555555",
+      "createdAt": "2026-08-21T09:03:03.528Z"
+    },
+    "666666666": {
+      "id": "666666666",
+      "nickname": "Muhammad",
+      "balance": 50,
+      "token": "VCOIN-JQVI-AF7K-10VA-HBXD",
+      "password": null,
+      "telegram": "Muhammad_200312",
+      "referralLink": "?ref=003122003",
+      "createdAt": "2026-08-20T11:20:10.720Z"
+    },
+    "777777777": {
+      "id": "777777777",
+      "nickname": "Ohistaxon",
+      "balance": 50,
+      "token": "VCOIN-R5F3-5GRC-P09E-07W3",
+      "password": null,
+      "telegram": "",
+      "referralLink": "?ref=777777777",
+      "createdAt": "2026-08-20T11:18:56.845Z"
+    },
+    "888888888": {},
+    "999999999": {
+      "id": "999999999",
+      "nickname": "Admin",
+      "balance": 120,
+      "token": "VCOIN-ABU1-7UB6-JTRE-NUO7",
+      "password": "55668576",
+      "telegram": "JaneCBI",
+      "referralLink": "?ref=999999999",
+      "createdAt": "2026-08-20T11:18:06.019Z"
+    }
+  },
+  "transactions": [
+    {
+      "id": "TXMS0I4NTB",
+      "timestamp": "2026-07-25T15:06:06.095Z",
+      "fromId": "030042010",
+      "toId": "CLICKEDCOIN_GAME",
+      "amount": 300,
+      "type": "payment",
+      "description": "ClickedCoin Monthly Premium"
+    }
+  ],
+  "settings": {
+    "commission": 0,
+    "depositProfit": 16,
+    "refBonus": 10
+  }
+}

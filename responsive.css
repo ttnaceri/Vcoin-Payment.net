@@ -1,0 +1,401 @@
+/* ============================================
+   Vcoin Payment App — Responsive Styles
+   Admin Panel + Kompyuter uchun tuzatilgan
+   ============================================ */
+
+/* ============================================================
+   KOMPYUTER (481px dan katta)
+   ============================================================ */
+@media (min-width: 481px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050510;
+    min-height: 100vh;
+  }
+
+  .app-container {
+    border-radius: var(--radius-xl, 20px);
+    box-shadow: 0 0 60px rgba(0,0,0,0.5);
+    max-height: 95vh;
+    overflow-y: auto;
+    min-height: auto;
+    height: 95vh;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .bottom-nav {
+    border-radius: var(--radius-xl, 20px) var(--radius-xl, 20px) 0 0;
+  }
+
+  /* Admin Panel kompyuterda */
+  .admin-panel-container {
+    max-height: 95vh;
+    height: 95vh;
+    border-radius: var(--radius-xl, 20px);
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
+   TABLET (768px dan katta)
+   ============================================================ */
+@media (min-width: 768px) {
+  /* Admin stats */
+  .admin-stats {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
+  /* Dashboard action buttons */
+  .action-btn {
+    padding: 20px 12px;
+  }
+
+  /* Admin sidebar */
+  .admin-sidebar {
+    width: 240px;
+  }
+
+  .admin-sidebar .nav-item span {
+    display: inline !important;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Admin main content */
+  .admin-main {
+    padding: 24px 32px;
+  }
+
+  .admin-header h2 {
+    font-size: 24px;
+  }
+
+  /* Desktop app container kattaroq */
+  .app-container {
+    max-width: 600px;
+  }
+}
+
+/* ============================================================
+   LAPTOP / DESKTOP (1024px dan katta)
+   ============================================================ */
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 700px;
+  }
+
+  /* Admin Panel kengaytirilgan */
+  .admin-sidebar {
+    width: 260px;
+  }
+
+  .admin-main {
+    padding: 28px 36px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .stat-card {
+    padding: 20px 24px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 26px;
+  }
+
+  .table-container {
+    max-height: 600px;
+  }
+
+  .charts-grid {
+    gap: 20px;
+  }
+
+  .chart-card {
+    min-height: 250px;
+    padding: 20px;
+  }
+}
+
+/* ============================================================
+   KATTA MONITOR (1440px dan katta)
+   ============================================================ */
+@media (min-width: 1440px) {
+  .app-container {
+    max-width: 800px;
+  }
+
+  .admin-sidebar {
+    width: 280px;
+  }
+
+  .admin-main {
+    padding: 32px 48px;
+  }
+
+  .stats-grid {
+    gap: 24px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 28px;
+  }
+
+  .table-container {
+    max-height: 700px;
+  }
+}
+
+/* ============================================================
+   KICHIK MOBIL (360px dan kichik)
+   ============================================================ */
+@media (max-width: 360px) {
+  .balance-card h2 {
+    font-size: 32px;
+  }
+
+  .action-btn {
+    padding: 12px 4px;
+    font-size: 10px;
+  }
+
+  .action-btn i {
+    font-size: 18px;
+  }
+
+  .nav-item {
+    font-size: 9px;
+  }
+
+  .nav-item i {
+    font-size: 18px;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+  }
+
+  /* Admin mobile */
+  .admin-sidebar {
+    width: 50px !important;
+  }
+
+  .admin-sidebar .nav-item {
+    padding: 8px !important;
+  }
+
+  .admin-main {
+    padding: 8px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .stat-card {
+    padding: 10px !important;
+  }
+
+  .stat-card .stat-value {
+    font-size: 14px !important;
+  }
+
+  .stat-card .stat-icon {
+    font-size: 16px !important;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-stat-card {
+    padding: 8px !important;
+  }
+
+  .admin-stat-value {
+    font-size: 14px !important;
+  }
+}
+
+/* ============================================================
+   LANDSCAPE (gorizontall holat)
+   ============================================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .bottom-nav {
+    height: 48px;
+  }
+
+  .nav-item span {
+    display: none;
+  }
+
+  .main-content {
+    padding-bottom: 56px;
+  }
+
+  .console-output {
+    max-height: 40vh;
+  }
+
+  /* Admin landscape */
+  .admin-sidebar {
+    width: 160px !important;
+  }
+
+  .admin-sidebar .nav-item {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  .admin-sidebar .logo-text {
+    display: none !important;
+  }
+
+  .admin-main {
+    padding: 12px 16px !important;
+  }
+
+  .admin-header h2 {
+    font-size: 16px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .stat-card {
+    padding: 8px 12px !important;
+  }
+
+  .stat-card .stat-value {
+    font-size: 14px !important;
+  }
+
+  .stat-card .stat-icon {
+    font-size: 16px !important;
+  }
+
+  .stat-card .stat-label {
+    font-size: 9px !important;
+  }
+}
+
+/* ============================================================
+   ADMIN PANEL QISILIB QOLISHNI TUZATISH
+   ============================================================ */
+
+/* Admin panel container to'g'ri ishlashi uchun */
+.admin-panel-container {
+  overflow: hidden !important;
+}
+
+.admin-sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+.admin-main {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Tablelar to'g'ri ko'rinishi uchun */
+.table-container {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: 500px !important;
+}
+
+.table-container table {
+  min-width: 600px !important;
+  width: 100% !important;
+}
+
+.table-container th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #0a0a0f !important;
+}
+
+.table-container td {
+  max-width: 150px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Stats kartalari qisilmasligi uchun */
+.stat-card {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+}
+
+.stat-card .stat-info {
+  min-width: 0 !important;
+}
+
+.stat-card .stat-value {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

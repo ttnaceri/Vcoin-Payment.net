@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vcoin Sync — Cloud Ulash</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .card {
+      background: linear-gradient(145deg, #1c2333, #161b2a);
+      padding: 40px 30px;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      border: 1px solid rgba(74,144,217,0.15);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    
+    .icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+    
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #4a90d9, #7b68ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: #8b949e;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    
+    .info-box {
+      background: rgba(74,144,217,0.06);
+      border: 1px solid rgba(74,144,217,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #8b949e;
+    }
+    
+    .info-box span {
+      color: #e6edf3;
+      font-weight: 600;
+    }
+    
+    .btn {
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #4a90d9, #357abd);
+      color: #fff;
+      width: 100%;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(74,144,217,0.3);
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #2ea043, #238636);
+    }
+    
+    .btn-success:hover {
+      box-shadow: 0 8px 30px rgba(46,160,67,0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #da3633, #b62324);
+    }
+    
+    .btn-danger:hover {
+      box-shadow: 0 8px 30px rgba(218,54,51,0.3);
+    }
+    
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.12);
+      box-shadow: none;
+    }
+    
+    #result {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      word-break: break-word;
+    }
+    
+    .success {
+      background: rgba(46,160,67,0.1);
+      border: 1px solid rgba(46,160,67,0.2);
+      color: #3fb950;
+    }
+    
+    .error {
+      background: rgba(218,54,51,0.1);
+      border: 1px solid rgba(218,54,51,0.2);
+      color: #f85149;
+    }
+    
+    .info {
+      background: rgba(74,144,217,0.1);
+      border: 1px solid rgba(74,144,217,0.2);
+      color: #58a6ff;
+    }
+    
+    .warning {
+      background: rgba(210,153,34,0.1);
+      border: 1px solid rgba(210,153,34,0.2);
+      color: #d29922;
+    }
+    
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-dot.online { background: #3fb950; }
+    .status-dot.offline { background: #f85149; }
+    .status-dot.syncing { background: #d29922; animation: pulse 1s infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 20px 0;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    
+    .stat-item .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e6edf3;
+    }
+    
+    .stat-item .label {
+      font-size: 11px;
+      color: #8b949e;
+      margin-top: 2px;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .btn-group .btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      font-size: 11px;
+      color: #484f58;
+    }
+    
+    .footer a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+    
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="app">
+    <div class="icon">☁️</div>
+    <h2>Vcoin Cloud</h2>
+    <p class="subtitle">Hisobingizni cloud ga ulang va barcha qurilmalarda sinxronlang</p>
+    
+    <div id="statusBox" class="info-box">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Tekshirilmoqda...</span>
+    </div>
+    
+    <div class="stats-grid" id="statsGrid" style="display: none;">
+      <div class="stat-item">
+        <div class="value" id="userCount">0</div>
+        <div class="label">Foydalanuvchilar</div>
+      </div>
+      <div class="stat-item">
+        <div class="value" id="balanceDisplay">0</div>
+        <div class="label">Sizning balans</div>
+      </div>
+    </div>
+    
+    <button class="btn" id="syncBtn" onclick="sync()">
+      <span>🔄</span> Hisobni Ulash
+    </button>
+    
+    <div id="result"></div>
+    
+    <div class="divider"></div>
+    
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="checkStatus()">
+        <span>📡</span> Status
+      </button>
+      <button class="btn btn-secondary" onclick="viewData()">
+        <span>📊</span> Ma'lumot
+      </button>
+    </div>
+    
+    <div class="footer">
+      Vcoin v1.0 • <a href="#" onclick="goToApp()">Asosiy sahifaga qaytish</a>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    // App state
+    let isSyncing = false;
+    
+    /**
+     * Initialize
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+      checkStatus();
+      
+      // Check if user exists
+      var user = DB.getUser();
+      if (user) {
+        document.getElementById('statsGrid').style.display = 'grid';
+        document.getElementById('balanceDisplay').textContent = Utils.formatNumber ? 
+          Utils.formatNumber(user.balance || 0) : (user.balance || 0) + ' Vcoin';
+      }
+    });
+    
+    /**
+     * Sync user account with cloud
+     */
+    async function sync() {
+      var result = document.getElementById('result');
+      var syncBtn = document.getElementById('syncBtn');
+      
+      if (isSyncing) return;
+      
+      var user = DB.getUser();
+      if (!user) {
+        result.className = 'error';
+        result.innerHTML = '❌ Hisob topilmadi. Iltimos, avval hisob yarating.';
+        return;
+      }
+      
+      isSyncing = true;
+      syncBtn.disabled = true;
+      syncBtn.innerHTML = '<span class="spinner"></span> Ulanmoqda...';
+      
+      result.className = 'info';
+      result.innerHTML = '⏳ Cloud ga ulanmoqda...';
+      
+      try {
+        // Check cloud connection
+        var cloudStatus = await checkCloudConnection();
+        if (!cloudStatus) {
+          throw new Error('Cloud serveriga ulanish mumkin emas');
+        }
+        
+        // Save user to cloud
+        result.innerHTML = '⏳ Hisob cloud ga saqlanmoqda...';
+        await Cloud.addUser(user);
+        
+        // Sync data
+        result.innerHTML = '⏳ Ma\'lumotlar sinxronlashtirilmoqda...';
+        await Cloud.syncToLocal();
+        
+        // Update local user balance from cloud
+        var cloudUser = await Cloud.getUser(user.id);
+        if (cloudUser) {
+          user.balance = cloudUser.balance || user.balance;
+          DB.setUser(user);
+        }
+        
+        // Update stats
+        var allUsers = await Cloud.getAllUsers();
+        var userCount = Object.keys(allUsers).length;
+        
+        document.getElementById('userCount').textContent = userCount;
+        document.getElementById('balanceDisplay').textContent = Utils.formatNumber ? 
+          Utils.formatNumber(user.balance || 0) : (user.balance || 0) + ' Vcoin';
+        document.getElementById('statsGrid').style.display = 'grid';
+        
+        result.className = 'success';
+        result.innerHTML = `
+          ✅ Hisob cloud ga muvaffaqiyatli ulandi! 🎉
+          <br><strong>ID:</strong> ${user.id}
+          <br><strong>Balans:</strong> ${Utils.formatNumber ? Utils.formatNumber(user.balance || 0) : (user.balance || 0)} Vcoin
+          <br><strong>Jami foydalanuvchilar:</strong> ${userCount}
+        `;
+        
+        updateStatus('online', 'Cloud bilan sinxronlangan ✅');
+        
+        // Show notification
+        if (window.Notifications && Notifications.show) {
+          Notifications.show('✅ Ulanish muvaffaqiyatli', 'Hisobingiz cloud ga ulandi!', 'success');
+        }
+        
+      } catch (e) {
+        console.error('Sync error:', e);
+        result.className = 'error';
+        result.innerHTML = '❌ Xatolik: ' + (e.message || 'Noma\'lum xatolik');
+        updateStatus('offline', 'Xatolik yuz berdi');
+        
+        if (window.Notifications && Notifications.show) {
+          Notifications.show('❌ Xatolik', e.message || 'Cloud ga ulanishda xatolik', 'error');
+        }
+      }
+      
+      isSyncing = false;
+      syncBtn.disabled = false;
+      syncBtn.innerHTML = '<span>🔄</span> Hisobni Ulash';
+    }
+    
+    /**
+     * Check cloud connection status
+     */
+    async function checkCloudConnection() {
+      try {
+        var data = await Cloud.loadData();
+        return data !== null;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    /**
+     * Check and update status
+     */
+    async function checkStatus() {
+      var result = document.getElementById('result');
+      var user = DB.getUser();
+      
+      if (!user) {
+        result.className = 'warning';
+        result.innerHTML = '⚠️ Hisob topilmadi. Iltimos, avval hisob yarating.';
+        updateStatus('offline', 'Hisob mavjud emas');
+        return;
+      }
+      
+      result.className = 'info';
+      result.innerHTML = '⏳ Status tekshirilmoqda...';
+      
+      try {
+        var connected = await checkCloudConnection();
+        
+        if (connected) {
+          var cloudUser = await Cloud.getUser(user.id);
+          
+          if (cloudUser) {
+            result.className = 'success';
+            result.innerHTML = `
+              ✅ Cloud bilan bog'langan
+              <br><strong>ID:</strong> ${user.id}
+              <br><strong>Cloud balans:</strong> ${Utils.formatNumber ? Utils.formatNumber(cloudUser.balance || 0) : (cloudUser.balance || 0)} Vcoin
+              <br><strong>Mahalliy balans:</strong> ${Utils.formatNumber ? Utils.formatNumber(user.balance || 0) : (user.balance || 0)} Vcoin
+            `;
+            updateStatus('online', 'Cloud bilan bog\'langan ✅');
+          } else {
+            result.className = 'warning';
+            result.innerHTML = '⚠️ Hisob cloud da topilmadi. "Hisobni Ulash" tugmasini bosing.';
+            updateStatus('offline', 'Cloud da hisob yo\'q');
+          }
+        } else {
+          result.className = 'error';
+          result.innerHTML = '❌ Cloud serveriga ulanish mumkin emas. Internet aloqasini tekshiring.';
+          updateStatus('offline', 'Serverga ulanish yo\'q');
+        }
+      } catch (e) {
+        result.className = 'error';
+        result.innerHTML = '❌ Xatolik: ' + (e.message || 'Noma\'lum xatolik');
+        updateStatus('offline', 'Xatolik yuz berdi');
+      }
+    }
+    
+    /**
+     * Update status indicator
+     */
+    function updateStatus(status, text) {
+      var dot = document.getElementById('statusDot');
+      var textEl = document.getElementById('statusText');
+      
+      dot.className = 'status-dot ' + status;
+      textEl.textContent = text;
+    }
+    
+    /**
+     * View user data
+     */
+    function viewData() {
+      var user = DB.getUser();
+      var result = document.getElementById('result');
+      
+      if (!user) {
+        result.className = 'error';
+        result.innerHTML = '❌ Hisob topilmadi';
+        return;
+      }
+      
+      var allUsers = DB.getAllUsers();
+      var transactions = DB.getUserTransactions(user.id);
+      var deposits = DB.getUserDeposits(user.id);
+      var referrals = DB.getReferralsByUser(user.id);
+      
+      result.className = 'info';
+      result.innerHTML = `
+        <div style="text-align: left; font-size: 13px; max-height: 300px; overflow-y: auto; width: 100%;">
+          <strong>👤 Profil</strong><br>
+          ID: ${user.id}<br>
+          Nikname: ${user.nickname || 'N/A'}<br>
+          Balans: ${Utils.formatNumber ? Utils.formatNumber(user.balance || 0) : (user.balance || 0)} Vcoin<br>
+          Token: ${user.token ? user.token.substring(0, 12) + '...' : 'N/A'}<br>
+          <br>
+          <strong>📊 Statistika</strong><br>
+          Tranzaksiyalar: ${transactions ? transactions.length : 0}<br>
+          Depozitlar: ${deposits ? deposits.length : 0}<br>
+          Referallar: ${referrals ? referrals.length : 0}<br>
+          Jami foydalanuvchilar: ${Object.keys(allUsers).length}<br>
+          <br>
+          <strong>🔗 Havola</strong><br>
+          <span style="font-size: 11px; word-break: break-all; color: #58a6ff;">${user.referralLink || 'Mavjud emas'}</span>
+        </div>
+      `;
+    }
+    
+    /**
+     * Go back to main app
+     */
+    function goToApp() {
+      window.location.href = 'index.html';
+    }
+    
+    // Auto check status every 30 seconds
+    setInterval(function() {
+      if (!isSyncing) {
+        checkStatus();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>
