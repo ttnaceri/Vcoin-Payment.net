@@ -141,7 +141,7 @@ var Admin = {
 
   printLine:function(o,t,ty){ty=ty||'output';var l=document.createElement('div');l.className='console-line';if(ty==='prompt'){var c=this.colorMap[this.consoleColor]||this.colorMap['a'];l.innerHTML='<span style="color:'+c.prompt+'">'+t+'</span>';}else{l.innerHTML='<span class="'+ty+'">'+t+'</span>';}o.appendChild(l);},
 
-  // ===== ANNOUNCE (TUZATILGAN - FAQAT TANLANGAN USERGA YOKI HAMMAGA) =====
+  // ===== ANNOUNCE (TUZATILGAN) =====
   cmdAnnounce: async function(o, a) {
     if (a.length === 0) {
       this.printLine(o, 'Usage: announce <text> [ID]', 'warning');
@@ -150,12 +150,10 @@ var Admin = {
       return;
     }
     
-    // So'nggi parametr ID bo'lishi mumkin
     var lastArg = a[a.length - 1];
     var userId = null;
     var text = a.join(' ');
     
-    // Agar so'nggi parametr 9 xonalik ID bo'lsa
     if (/^\d{9}$/.test(lastArg)) {
       userId = lastArg;
       text = a.slice(0, -1).join(' ');
@@ -174,7 +172,6 @@ var Admin = {
     
     var users = d.record ? d.record.users : (d.users || {});
     
-    // ===== BIR USERGA =====
     if (userId) {
       var user = users[userId];
       if (!user) {
@@ -182,7 +179,6 @@ var Admin = {
         return;
       }
       
-      // Faqat shu user uchun saqlash
       var announceKey = 'vcoin_announce_' + userId;
       var announceData = {
         text: text.replace(/\{name\}/g, user.nickname || 'User'),
@@ -195,7 +191,6 @@ var Admin = {
       return;
     }
     
-    // ===== HAMMAGA =====
     var userKeys = Object.keys(users);
     if (userKeys.length === 0) {
       this.printLine(o, '⚠️ Foydalanuvchilar yo\'q!', 'warning');
@@ -364,7 +359,9 @@ var Admin = {
     this.printLine(o, '🔔 To\'lovlar amalga oshganda xabar yuboriladi.', 'info');
   },
 
-  // ===== NEWID (POP-UP) =====
+  // ============================================================
+  // NEWID - TUZATILGAN (Backend ga to'g'ri saqlaydi)
+  // ============================================================
   cmdNewId: function(o, a) {
     var self = this;
     
@@ -398,10 +395,15 @@ var Admin = {
     }, 200);
   },
 
-  // ===== CONFIRM NEW USER =====
+  // ============================================================
+  // CONFIRM NEW USER - TUZATILGAN
+  // ============================================================
   confirmNewUser: async function() {
     var o = document.getElementById('consoleOutput');
-    if (!o) return;
+    if (!o) {
+      console.error('❌ consoleOutput topilmadi');
+      return;
+    }
     
     var userId = document.getElementById('newUserId').value.trim();
     var nickname = document.getElementById('newUserNick').value.trim();
@@ -416,6 +418,7 @@ var Admin = {
     
     error.style.display = 'none';
     
+    // ===== VALIDATSIYA =====
     if (!userId || userId.length !== 9 || !/^\d{9}$/.test(userId)) {
       error.textContent = '❌ ID 9 xonali raqam bo\'lishi kerak!';
       error.style.display = 'block';
@@ -444,15 +447,26 @@ var Admin = {
       telegram = telegram.replace('@', '').replace('https://t.me/', '').trim();
     }
     
+    // ===== CLOUD DAN MA'LUMOT OLISH =====
     var d = await Cloud.loadData();
+    
+    // Agar Cloud dan ma'lumot kelmasa, yangi obyekt yaratish
     if (!d) {
-      error.textContent = '❌ Cloud xatosi!';
-      error.style.display = 'block';
-      return;
+      d = { users: {}, transactions: [], settings: { commission: 0 } };
     }
     
-    var users = d.record ? d.record.users : (d.users || {});
+    // To'g'ri formatga keltirish
+    var users = {};
+    if (d.record) {
+      users = d.record.users || {};
+    } else if (d.users) {
+      users = d.users || {};
+    } else {
+      users = {};
+      d.users = users;
+    }
     
+    // ===== UNIKALLIKNI TEKSHIRISH =====
     if (users[userId]) {
       error.textContent = '❌ Bu ID allaqachon mavjud! ID: ' + userId;
       error.style.display = 'block';
@@ -467,7 +481,8 @@ var Admin = {
       }
     }
     
-    var token = Utils.generateToken();
+    // ===== YANGI USER YARATISH =====
+    var token = Utils.generateToken ? Utils.generateToken() : 'TK' + Date.now().toString(36).toUpperCase();
     var newUser = {
       id: userId,
       nickname: nickname,
@@ -475,30 +490,39 @@ var Admin = {
       token: token,
       password: null,
       telegram: telegram || '',
-      referralLink: '?ref=' + userId,
       createdAt: new Date().toISOString()
     };
     
     users[userId] = newUser;
     
+    // ===== BACKEND GA SAQLASH =====
+    var saveData = {
+      users: users,
+      transactions: d.transactions || [],
+      settings: d.settings || { commission: 0 }
+    };
+    
+    // Agar record formatida bo'lsa
     if (d.record) {
       d.record.users = users;
+      var saved = await Cloud.saveData(d);
     } else {
       d.users = users;
+      var saved = await Cloud.saveData(d);
     }
     
-    var saved = await Cloud.saveData(d);
     if (!saved) {
-      error.textContent = '❌ Saqlashda xatolik!';
+      error.textContent = '❌ Saqlashda xatolik! Backend server ishlayotganligini tekshiring.';
       error.style.display = 'block';
       return;
     }
     
+    // ===== LOKALGA SINXRONLASH =====
     await Cloud.syncToLocal();
     
     UI.closeModal();
     
-    this.printLine(o, '✅ Yangi user yaratildi:', 'success');
+    this.printLine(o, '✅ Yangi user yaratildi va backend ga saqlandi!', 'success');
     this.printLine(o, '   👤 ' + nickname + ' (ID: ' + userId + ')', 'success');
     this.printLine(o, '   💰 Balans: ' + Utils.formatCurrency(balance), 'success');
     if (telegram) {
@@ -507,8 +531,9 @@ var Admin = {
       this.printLine(o, '   📱 Telegram: Kiritilmagan', 'output');
     }
     this.printLine(o, '   📌 Parolni user o\'zi yaratadi (login paytida)', 'warning');
+    this.printLine(o, '   ☁️ Ma\'lumotlar backend ga saqlandi!', 'success');
     
-    UI.showToast('✅ ' + nickname + ' muvaffaqiyatli yaratildi!', 'success');
+    UI.showToast('✅ ' + nickname + ' muvaffaqiyatli yaratildi va backend ga saqlandi!', 'success');
     this.refreshStats();
   },
 
@@ -520,7 +545,6 @@ var Admin = {
   cmdUserInfo:async function(o,a){if(a.length===0)return;var userId=a[0];var d=await Cloud.loadData();if(!d)return;var users=d.record?d.record.users:d.users||{};var u=users[userId];if(!u){this.printLine(o,'User not found','error');return;}this.printLine(o,'👤 '+u.nickname,'success');this.printLine(o,'🆔 '+u.id,'output');this.printLine(o,'📱 '+(u.telegram?'@'+u.telegram:'Kiritilmagan'),'output');},
   cmdExportExcel:async function(o){var d=await Cloud.loadData();if(!d)return;var users=d.record?d.record.users:d.users||{};var csv='ID,Nikname,Telegram\n';for(var id in users){var u=users[id];csv+=id+','+(u.nickname||'')+','+(u.telegram||'')+'\n';}var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vcoin_users.csv';a.click();this.printLine(o,'✅ Yuklandi! '+Object.keys(users).length+' ta','success');},
   
-  // ===== SETSHOPID =====
   cmdSetShopId:async function(o,a){
     var parsed = this.parseArgs(a);
     if(parsed.ids.length === 0){
@@ -597,7 +621,6 @@ var Admin = {
   cmdCommission:function(o,a){if(a.length===0){this.printLine(o,'Commission: '+DB.getSettings().commission+'%','info');return;}var p=parseFloat(a[0]);if(isNaN(p)||p<0||p>100)return;DB.updateSettings({commission:p});if(Cloud&&Cloud.updateSettings)Cloud.updateSettings({commission:p});this.printLine(o,'✅ Set to '+p+'%','success');},
   cmdSetComission:async function(o,a){var parsed=this.parseArgs(a);if(parsed.ids.length===0||parsed.value===null)return;var pct=parsed.value;if(isNaN(pct)||pct<0||pct>100)return;var d=await Cloud.loadData();if(!d)return;if(!d.userCommissions)d.userCommissions={};for(var i=0;i<parsed.ids.length;i++)d.userCommissions[parsed.ids[i]]=pct;await Cloud.saveData(d);await Cloud.syncToLocal();this.printLine(o,'✅ Set '+pct+'% for '+parsed.ids.length+' user(s)','success');},
 
-  // ===== GIVE (ALL SUPPORT) =====
   cmdGiveMulti: async function(o, a) {
     var parsed = this.parseArgs(a);
     
@@ -686,7 +709,6 @@ var Admin = {
     this.printLine(o, '✅ Gave ' + Utils.formatCurrency(amt) + ' to ' + parsed.ids.length + ' user(s)', 'success');
   },
 
-  // ===== TAKE (ALL SUPPORT) =====
   cmdTakeMulti: async function(o, a) {
     var parsed = this.parseArgs(a);
     
@@ -770,7 +792,6 @@ var Admin = {
     this.printLine(o, '✅ Took ' + Utils.formatCurrency(amt) + ' from ' + parsed.ids.length + ' user(s)', 'success');
   },
 
-  // ===== BAN (ALL SUPPORT) =====
   cmdBanMulti: function(o, a) {
     var parsed = this.parseArgs(a);
     var timeStr = null;
@@ -828,7 +849,6 @@ var Admin = {
     this.printLine(o, '✅ Banned ' + ids.length + ' user(s)' + (minutes > 0 ? ' for ' + timeStr : ' (abadiy)'), 'success');
   },
 
-  // ===== UNBAN (ALL SUPPORT) =====
   cmdUnbanMulti: function(o, a) {
     var parsed = this.parseArgs(a);
     
