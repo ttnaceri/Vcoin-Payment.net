@@ -9,21 +9,23 @@ var CONFIG = window.CONFIG || {};
 
 var Cloud = {
   // ===== BACKEND SOZLAMALARI =====
-  BACKEND_TYPE: 'local', // Faqat local ishlatiladi
+  BACKEND_TYPE: 'local',
   
   // Local backend
   LOCAL_URL: (CONFIG.LOCAL && CONFIG.LOCAL.URL) ? CONFIG.LOCAL.URL : 'http://localhost:3000/api/',
   
-  // ===== Ma'lumotlar kesh (offline rejim uchun) =====
+  // ===== Ma'lumotlar kesh =====
   _cache: null,
   _cacheTime: 0,
   _cacheDuration: 60000, // 1 daqiqa
 
-  // ============ MA'LUMOTLARNI YUKLASH ============
+  // ============================================================
+  // 1. MA'LUMOTLARNI YUKLASH
+  // ============================================================
   loadData: async function(forceRefresh) {
     forceRefresh = forceRefresh || false;
     
-    // Keshdan olish (agar yangi bo'lmasa)
+    // Keshdan olish
     if (!forceRefresh && this._cache && (Date.now() - this._cacheTime) < this._cacheDuration) {
       console.log('📦 Keshlangan ma\'lumotlar ishlatilmoqda');
       return this._cache;
@@ -38,7 +40,6 @@ var Cloud = {
       var response = await fetch(url, { headers: headers });
       
       if (!response.ok) {
-        // 404 xatosi - backend ishlamayapti
         if (response.status === 404) {
           console.warn('⚠️ Backend topilmadi (404), lokal ma\'lumotlar ishlatiladi');
           return this._getLocalFallback();
@@ -49,22 +50,42 @@ var Cloud = {
       var data = await response.json();
       console.log('✅ Local backend dan yuklandi');
       
-      // Local backend: { success: true, record: {...} }
+      // ===== DATA FORMATINI TO'G'RILASH =====
+      var result = null;
+      
+      // Format 1: { success: true, record: {...} }
       if (data && data.success && data.record) {
-        this._cache = data.record;
-        this._cacheTime = Date.now();
-        return data.record;
+        result = data.record;
+      }
+      // Format 2: { success: true, users: {...}, transactions: [...] }
+      else if (data && data.success && data.users) {
+        result = {
+          users: data.users || {},
+          transactions: data.transactions || [],
+          settings: data.settings || { commission: 0 }
+        };
+      }
+      // Format 3: { users: {...}, transactions: [...] } (to'g'ridan-to'g'ri)
+      else if (data && data.users) {
+        result = data;
+      }
+      // Format 4: { record: {...} }
+      else if (data && data.record) {
+        result = data.record;
+      }
+      // Format 5: Boshqa format
+      else {
+        console.warn('⚠️ Backend dan kutilmagan format:', data);
+        result = this._getLocalFallback();
       }
       
-      // Agar data to'g'ri formatda bo'lmasa
-      if (data && data.users) {
-        this._cache = data;
+      // Keshga saqlash
+      if (result) {
+        this._cache = result;
         this._cacheTime = Date.now();
-        return data;
       }
       
-      console.warn('⚠️ Backend dan kutilmagan format:', data);
-      return this._getLocalFallback();
+      return result;
       
     } catch(e) { 
       console.error('❌ Yuklash xatosi:', e.message);
@@ -72,13 +93,12 @@ var Cloud = {
     }
   },
   
-  // ===== Lokal fallback (backend ishlamasa) =====
+  // ===== Lokal fallback =====
   _getLocalFallback: function() {
     try {
-      // Lokal storage dan olish
-      var allUsers = DB.getAllUsers ? DB.getAllUsers() : {};
-      var transactions = DB.getTransactions ? DB.getTransactions() : [];
-      var settings = DB.getSettings ? DB.getSettings() : { commission: 0 };
+      var allUsers = DB.get('allUsers', {});
+      var transactions = DB.get('transactions', []);
+      var settings = DB.get('settings', { commission: 0 });
       
       var data = {
         users: allUsers,
@@ -94,7 +114,9 @@ var Cloud = {
     }
   },
 
-  // ============ MA'LUMOTLARNI SAQLASH ============
+  // ============================================================
+  // 2. MA'LUMOTLARNI SAQLASH
+  // ============================================================
   saveData: async function(record) {
     try {
       var cleanRecord = JSON.parse(JSON.stringify(record));
@@ -112,7 +134,6 @@ var Cloud = {
       if (!response.ok) {
         if (response.status === 404) {
           console.warn('⚠️ Backend topilmadi (404), lokalga saqlanadi');
-          // Lokalga saqlash
           this._saveToLocal(record);
           return true;
         }
@@ -129,13 +150,17 @@ var Cloud = {
       // Lokalga ham saqlash
       this._saveToLocal(record);
       
-      return data && data.success ? true : false;
+      // Ba'zi backendlarda success maydoni bo'lmasligi mumkin
+      if (data && data.success === false) {
+        return false;
+      }
+      
+      return true;
       
     } catch(e) { 
       console.error('❌ Saqlash xatosi:', e.message);
-      // Lokalga saqlash
       this._saveToLocal(record);
-      return true; // Lokalga saqlangani uchun true qaytarish
+      return true;
     }
   },
   
@@ -157,33 +182,32 @@ var Cloud = {
     }
   },
 
-  // ============ FOYDALANUVCHI FUNKSIYALARI ============
+  // ============================================================
+  // 3. FOYDALANUVCHI FUNKSIYALARI
+  // ============================================================
   
   addUser: async function(user) {
     try {
-      // Local backend ga so'rov
+      // 1. Backend ga saqlash
       var response = await fetch(this.LOCAL_URL + 'users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
       });
       
+      // 2. Lokalga saqlash
+      DB.saveUserToRegistry(user);
+      
       if (!response.ok) {
-        // Backend ishlamasa, lokalga saqlash
-        console.warn('⚠️ Backend xatosi, lokalga saqlanadi');
-        DB.saveUserToRegistry(user);
+        console.warn('⚠️ Backend xatosi, lokalga saqlandi');
         return true;
       }
       
       var result = await response.json();
+      return result && result.success !== false;
       
-      // Lokalga ham saqlash
-      DB.saveUserToRegistry(user);
-      
-      return result && result.success ? true : false;
     } catch(e) {
       console.error('❌ addUser xatosi:', e);
-      // Lokalga saqlash
       DB.saveUserToRegistry(user);
       return true;
     }
@@ -193,7 +217,6 @@ var Cloud = {
     try {
       var response = await fetch(this.LOCAL_URL + 'users/' + userId);
       if (!response.ok) {
-        // Backend ishlamasa, lokal dan olish
         console.warn('⚠️ Backend xatosi, lokal dan olinadi');
         return DB.getUserById(userId);
       }
@@ -207,26 +230,29 @@ var Cloud = {
 
   updateUser: async function(userId, updates) {
     try {
+      // 1. Backend dan ma'lumot olish
       var data = await this.loadData();
+      
+      // 2. Agar backend da bo'lmasa, lokal dan yangilash
       if (!data || !data.users || !data.users[userId]) {
-        // Lokal dan yangilash
         DB.updateUserInRegistry(userId, updates);
         return true;
       }
       
+      // 3. Yangilash
       for (var k in updates) {
         if (updates.hasOwnProperty(k)) {
           data.users[userId][k] = updates[k];
         }
       }
       
-      // Backend ga saqlash
+      // 4. Backend ga saqlash
       var saved = await this.saveData(data);
       
-      // Lokal ga yangilash
+      // 5. Lokal ga yangilash
       DB.updateUserInRegistry(userId, updates);
       
-      // Joriy user bo'lsa yangilash
+      // 6. Joriy user bo'lsa yangilash
       var currentUser = DB.getUser();
       if (currentUser && currentUser.id === userId) {
         for (var key in updates) {
@@ -236,6 +262,7 @@ var Cloud = {
       }
       
       return saved;
+      
     } catch(e) {
       console.error('❌ updateUser xatosi:', e);
       DB.updateUserInRegistry(userId, updates);
@@ -252,31 +279,33 @@ var Cloud = {
       var response = await fetch(this.LOCAL_URL + 'users');
       if (!response.ok) {
         console.warn('⚠️ Backend xatosi, lokal dan olinadi');
-        return DB.getAllUsers();
+        return DB.get('allUsers', {});
       }
       var result = await response.json();
       
       if (result && result.success && result.users) {
-        // Lokalga yangilash
         DB.set('allUsers', result.users);
         return result.users;
       }
       
-      return DB.getAllUsers();
+      return DB.get('allUsers', {});
+      
     } catch(e) {
       console.error('❌ getAllUsers xatosi:', e);
-      return DB.getAllUsers();
+      return DB.get('allUsers', {});
     }
   },
 
-  // ============ TRANZAKSIYA FUNKSIYALARI ============
+  // ============================================================
+  // 4. TRANZAKSIYA FUNKSIYALARI
+  // ============================================================
   
   getTransactions: async function() { 
     try {
       var response = await fetch(this.LOCAL_URL + 'transactions');
       if (!response.ok) {
         console.warn('⚠️ Backend xatosi, lokal dan olinadi');
-        return DB.getTransactions();
+        return DB.get('transactions', []);
       }
       var result = await response.json();
       
@@ -285,10 +314,11 @@ var Cloud = {
         return result.transactions;
       }
       
-      return DB.getTransactions();
+      return DB.get('transactions', []);
+      
     } catch(e) {
       console.error('❌ getTransactions xatosi:', e);
-      return DB.getTransactions();
+      return DB.get('transactions', []);
     }
   },
 
@@ -300,18 +330,16 @@ var Cloud = {
         body: JSON.stringify(transaction)
       });
       
+      DB.addTransaction(transaction);
+      
       if (!response.ok) {
-        console.warn('⚠️ Backend xatosi, lokalga saqlanadi');
-        DB.addTransaction(transaction);
+        console.warn('⚠️ Backend xatosi, lokalga saqlandi');
         return true;
       }
       
       var result = await response.json();
+      return result && result.success !== false;
       
-      // Lokalga ham saqlash
-      DB.addTransaction(transaction);
-      
-      return result && result.success ? true : false;
     } catch(e) {
       console.error('❌ addTransaction xatosi:', e);
       DB.addTransaction(transaction);
@@ -319,14 +347,16 @@ var Cloud = {
     }
   },
 
-  // ============ SETTINGS FUNKSIYALARI ============
+  // ============================================================
+  // 5. SETTINGS FUNKSIYALARI
+  // ============================================================
   
   getSettings: async function() { 
     try {
       var response = await fetch(this.LOCAL_URL + 'settings');
       if (!response.ok) {
         console.warn('⚠️ Backend xatosi, lokal dan olinadi');
-        return DB.getSettings();
+        return DB.get('settings', { commission: 0 });
       }
       var result = await response.json();
       
@@ -335,10 +365,11 @@ var Cloud = {
         return result.settings;
       }
       
-      return DB.getSettings();
+      return DB.get('settings', { commission: 0 });
+      
     } catch(e) {
       console.error('❌ getSettings xatosi:', e);
-      return DB.getSettings();
+      return DB.get('settings', { commission: 0 });
     }
   },
 
@@ -350,18 +381,16 @@ var Cloud = {
         body: JSON.stringify(newSettings)
       });
       
+      DB.updateSettings(newSettings);
+      
       if (!response.ok) {
-        console.warn('⚠️ Backend xatosi, lokalga saqlanadi');
-        DB.updateSettings(newSettings);
+        console.warn('⚠️ Backend xatosi, lokalga saqlandi');
         return true;
       }
       
       var result = await response.json();
+      return result && result.success !== false;
       
-      // Lokalga ham saqlash
-      DB.updateSettings(newSettings);
-      
-      return result && result.success ? true : false;
     } catch(e) {
       console.error('❌ updateSettings xatosi:', e);
       DB.updateSettings(newSettings);
@@ -369,7 +398,9 @@ var Cloud = {
     }
   },
 
-  // ============ TRANSFER ============
+  // ============================================================
+  // 6. TRANSFER
+  // ============================================================
   
   transfer: async function(fromId, toId, amount) {
     amount = Number(amount);
@@ -384,7 +415,6 @@ var Cloud = {
       
       if (!response.ok) {
         console.warn('⚠️ Backend xatosi, lokal transfer bajariladi');
-        // Lokal transfer (offline rejim)
         return this._localTransfer(fromId, toId, amount);
       }
       
@@ -397,7 +427,7 @@ var Cloud = {
     }
   },
   
-  // ===== Lokal transfer (offline rejim) =====
+  // ===== Lokal transfer =====
   _localTransfer: function(fromId, toId, amount) {
     try {
       var fromUser = DB.getUserById(fromId);
@@ -406,7 +436,6 @@ var Cloud = {
       if (!fromUser) return { success: false, error: 'Jo\'natuvchi topilmadi' };
       if (fromUser.balance < amount) return { success: false, error: 'Balans yetarli emas' };
       
-      // Balanslarni yangilash
       fromUser.balance = (fromUser.balance || 0) - amount;
       DB.saveUserToRegistry(fromUser);
       
@@ -424,7 +453,6 @@ var Cloud = {
         DB.saveUserToRegistry(newUser);
       }
       
-      // Tranzaksiya qo'shish
       DB.addTransaction({
         type: 'transfer',
         fromId: fromId,
@@ -434,7 +462,6 @@ var Cloud = {
         timestamp: new Date().toISOString()
       });
       
-      // Joriy user yangilash
       var currentUser = DB.getUser();
       if (currentUser && currentUser.id === fromId) {
         currentUser.balance = fromUser.balance;
@@ -450,12 +477,14 @@ var Cloud = {
     }
   },
 
-  // ============ SINXRONLASH ============
+  // ============================================================
+  // 7. SINXRONLASH
+  // ============================================================
   
   syncToLocal: async function() {
     console.log('🔄 Local backend sinxronlash...');
     try {
-      var data = await this.loadData(true); // force refresh
+      var data = await this.loadData(true);
       if (!data) { 
         console.warn('⚠️ Backend bo\'sh, lokal ma\'lumotlar ishlatiladi'); 
         return; 
@@ -490,7 +519,9 @@ var Cloud = {
     }
   },
 
-  // ============ TOZALASH ============
+  // ============================================================
+  // 8. TOZALASH
+  // ============================================================
   
   clearCloud: async function() { 
     return await this.saveData({ 
