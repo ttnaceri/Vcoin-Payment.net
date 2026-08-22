@@ -19,24 +19,30 @@
     if (typeof LANG !== 'undefined' && LANG.loadLanguage) {
       var currentLang = LANG.loadLanguage();
       console.log('🌐 Language loaded:', currentLang);
-    } else
+    } else {
+      console.warn('⚠️ LANG module not found, using default');
+    }
     
     // ============ 2. ROUTER ============
     console.log('🔄 Initializing router...');
-    if (typeof Router !== 'undefined') {
+    if (typeof Router !== 'undefined' && Router.init) {
       Router.init();
+    } else {
+      console.warn('⚠️ Router module not found');
     }
     
     // ============ 3. UI ============
     console.log('🎨 Initializing UI...');
-    if (typeof UI !== 'undefined') {
+    if (typeof UI !== 'undefined' && UI.init) {
       UI.init();
+    } else {
+      console.warn('⚠️ UI module not found');
     }
     
     // ============ 4. BACKEND SINXRONLASH ============
     console.log('☁️ Backend sync...');
     try {
-      if (typeof Cloud !== 'undefined') {
+      if (typeof Cloud !== 'undefined' && Cloud.syncToLocal) {
         await Cloud.syncToLocal();
         console.log('✅ Backend synced');
       } else {
@@ -50,26 +56,39 @@
     if (typeof DB !== 'undefined' && DB.userExists()) {
       var user = DB.getUser();
       console.log('👤 User:', user.nickname, '| Balance:', user.balance);
-      if (typeof UI !== 'undefined') {
+      if (typeof UI !== 'undefined' && UI.navigateTo) {
         UI.navigateTo('dashboard');
       }
     } else {
       console.log('🆕 No user found');
-      if (typeof UI !== 'undefined') {
+      if (typeof UI !== 'undefined' && UI.navigateTo) {
         UI.navigateTo('auth');
       }
     }
     
     // ============ 6. URL PARAMETRLARNI TEKSHIRISH ============
-    handlePaymentParams();
+    try {
+      if (typeof handlePaymentParams === 'function') {
+        handlePaymentParams();
+      } else {
+        console.warn('⚠️ handlePaymentParams not found');
+      }
+    } catch(e) {
+      console.error('❌ Payment params error:', e.message);
+    }
     
     console.log('✅ Vcoin Payment App ready');
   }
   
   // ============ TASHQI TO'LOV PARAMETRLARI ============
   function handlePaymentParams() {
-    var params = Utils.getUrlParams ? Utils.getUrlParams() : {};
+    // Utils mavjudligini tekshirish
+    if (typeof Utils === 'undefined' || !Utils.getUrlParams) {
+      console.warn('⚠️ Utils.getUrlParams not found');
+      return;
+    }
     
+    var params = Utils.getUrlParams();
     console.log('🔍 URL parametrlar:', params);
     
     // ===== 1. VCOIN QO'SHISH (ADD) =====
@@ -105,6 +124,14 @@
     var note = params.note || 'Tashqi sayt orqali qo\'shish';
     
     console.log('➕ External add request:', { token, amount, addTo, note });
+    
+    // DB mavjudligini tekshirish
+    if (typeof DB === 'undefined') {
+      console.error('❌ DB module not found');
+      UI.showToast('❌ Tizim xatosi!', 'error');
+      clearUrlParams();
+      return;
+    }
     
     var adminToken = DB.get('adminToken', null);
     
@@ -179,6 +206,13 @@
     var note = params.note || 'Tashqi to\'lov';
     
     console.log('💳 External payment request:', { token, amount, payTo, note });
+    
+    if (typeof DB === 'undefined') {
+      console.error('❌ DB module not found');
+      UI.showToast('❌ Tizim xatosi!', 'error');
+      clearUrlParams();
+      return;
+    }
     
     var user = DB.getUser();
     if (!user) {
@@ -272,6 +306,13 @@
     
     console.log('🔄 Refund request:', { token, amount, refundTo, note, transactionId });
     
+    if (typeof DB === 'undefined') {
+      console.error('❌ DB module not found');
+      UI.showToast('❌ Tizim xatosi!', 'error');
+      clearUrlParams();
+      return;
+    }
+    
     // Admin tokenni tekshirish
     var adminToken = DB.get('adminToken', null);
     
@@ -347,6 +388,13 @@
     
     console.log('💳 Simple withdraw:', { token, amount, note });
     
+    if (typeof DB === 'undefined') {
+      console.error('❌ DB module not found');
+      UI.showToast('❌ Tizim xatosi!', 'error');
+      clearUrlParams();
+      return;
+    }
+    
     var user = DB.getUser();
     if (!user) {
       console.log('❌ Foydalanuvchi tizimga kirmagan');
@@ -401,6 +449,11 @@
   
   // ============ WEBHOOK YUBORISH ============
   function sendWebhook(data) {
+    if (typeof DB === 'undefined') {
+      console.log('ℹ️ DB module not found');
+      return;
+    }
+    
     var webhookUrl = DB.get('webhookUrl', null);
     
     if (!webhookUrl) {
